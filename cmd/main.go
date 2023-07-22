@@ -22,7 +22,7 @@ func main() {
 		log.Fatalf("[main] database.Migrate() retunrned error: %+v\n", err)
 	}
 
-	server := server.NewServer(server.WithPrefix("/flashcard"))
+	server := server.NewServer(server.WithPrefix("/customer"))
 	server.Use("/user", middlewares.ValidateUserMiddleware())
 	server.Use("/*", cors.New(cors.Config{
 		AllowOrigins: "*",
