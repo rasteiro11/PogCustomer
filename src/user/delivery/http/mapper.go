@@ -29,3 +29,15 @@ func registerResponseMapper(req *models.RegisterResponse) *registerResponse {
 		ExpiresAt: req.ExpiresAt,
 	}
 }
+
+func changePasswordRequestMapper(req *changePasswordRequest) *models.ChangePasswordRequest {
+	return &models.ChangePasswordRequest{
+		Password:    req.Password,
+		NewPassword: req.NewPassword,
+		Email:       req.Email,
+	}
+}
+
+func changePasswordResponseMapper(req *models.ChangePasswordResponse) *changePasswordResponse {
+	return &changePasswordResponse{}
+}

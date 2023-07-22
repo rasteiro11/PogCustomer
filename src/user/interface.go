@@ -15,10 +15,12 @@ type (
 	Usecase interface {
 		Login(ctx context.Context, req *models.User) (*models.LoginResponse, error)
 		Register(ctx context.Context, req *models.User) (*models.RegisterResponse, error)
+		ChangePassword(ctx context.Context, req *models.ChangePasswordRequest) (*models.ChangePasswordResponse, error)
 	}
 	Repository interface {
 		FindOne(ctx context.Context, user *models.User) (*models.User, error)
 		Create(ctx context.Context, user *models.User) (*models.User, error)
 		FindOneByEmail(ctx context.Context, user *models.User) (*models.User, error)
+		UpdateById(ctx context.Context, user *models.User) (*models.User, error)
 	}
 )

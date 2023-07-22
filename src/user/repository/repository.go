@@ -54,3 +54,17 @@ func (r *repository) FindOneByEmail(ctx context.Context, user *models.User) (*mo
 
 	return userMapper(res), nil
 }
+
+func (r *repository) UpdateById(ctx context.Context, user *models.User) (*models.User, error) {
+	query := userEntityMapper(user)
+	if err := r.db.Debug().Where(User{
+		Model: gorm.Model{
+			ID: user.ID,
+		},
+	}).Updates(query).Error; err != nil {
+		log.Printf("[user.repository.FindOne] db.Take() returned error: %+v\n", err)
+		return nil, err
+	}
+
+	return userMapper(query), nil
+}

@@ -39,8 +39,11 @@ func NewHandler(server server.Server, opts ...HandlerOpt) {
 
 	server.AddHandler("/signin", AuthGroupPath, http.MethodPost, h.Login)
 	server.AddHandler("/register", AuthGroupPath, http.MethodPost, h.Register)
+	server.AddHandler("/changepassword", AuthGroupPath, http.MethodPost, h.ChangePassword)
 	server.AddHandler("/welcome", AuthGroupPath, http.MethodPost, h.Welcome)
 }
+
+var ErrNotAuthorized = errors.New("not authorized")
 
 var _ user.Handler = (*handler)(nil)
 
@@ -62,6 +65,15 @@ type registerRequest struct {
 type registerResponse struct {
 	Token     string    `json:"token"`
 	ExpiresAt time.Time `json:"expires_at"`
+}
+
+type changePasswordRequest struct {
+	Password    string `json:"password"`
+	NewPassword string `json:"new_password"`
+	Email       string `json:"email"`
+}
+
+type changePasswordResponse struct {
 }
 
 func (h *handler) Login(c *fiber.Ctx) error {
@@ -88,17 +100,32 @@ func (h *handler) Register(c *fiber.Ctx) error {
 
 	creds, err := h.usecase.Register(c.Context(), registerRequestMapper(req))
 	if err != nil {
-		return rest.NewStatusUnauthorized(c, err)
+		return rest.NewStatusUnprocessableEntity(c, err)
 	}
 
 	return rest.NewStatusCreated(c, rest.WithBody(creds))
+}
+
+func (h *handler) ChangePassword(c *fiber.Ctx) error {
+	req := &changePasswordRequest{}
+
+	if err := c.BodyParser(req); err != nil {
+		return rest.NewStatusBadRequest(c, err)
+	}
+
+	creds, err := h.usecase.ChangePassword(c.Context(), changePasswordRequestMapper(req))
+	if err != nil {
+		return rest.NewStatusUnprocessableEntity(c, err)
+	}
+
+	return rest.NewStatusOk(c, rest.WithBody(changePasswordResponseMapper(creds)))
 }
 
 func (h *handler) Welcome(c *fiber.Ctx) error {
 	jwtToken := c.GetReqHeaders()
 	tok, ok := jwtToken["Authorization"]
 	if !ok {
-		return rest.NewStatusUnauthorized(c, errors.New("not authorized"))
+		return rest.NewStatusUnauthorized(c, ErrNotAuthorized)
 	}
 
 	tok = strings.ReplaceAll(tok, "Bearer ", "")

@@ -120,6 +120,21 @@ func (u *usecase) Login(ctx context.Context, req *models.User) (*models.LoginRes
 	}, nil
 }
 
+func (u *usecase) ChangePassword(ctx context.Context, req *models.ChangePasswordRequest) (*models.ChangePasswordResponse, error) {
+	user, err := u.repository.FindOne(ctx, &models.User{Email: req.Email, Password: hashPassword(u.hash, req.Password)})
+	if err != nil {
+		return nil, err
+	}
+
+	user.Password = hashPassword(u.hash, req.NewPassword)
+	_, err = u.repository.UpdateById(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.ChangePasswordResponse{}, nil
+}
+
 func (u *usecase) extractClaims(ctx context.Context, token string) (*claims, error) {
 	claims := &claims{}
 	_, err := jwt.ParseWithClaims(token, claims, func(t *jwt.Token) (interface{}, error) {

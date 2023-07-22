@@ -20,7 +20,7 @@ func main() {
 	}
 
 	if err := database.Migrate(entities.GetEntities()...); err != nil {
-		log.Fatalf("[main] database.Migrate() retunrned error: %+v\n", err)
+		log.Fatalf("[main] database.Migrate() returned error: %+v\n", err)
 	}
 
 	server := server.NewServer(server.WithPrefix("/customer"))
@@ -42,6 +42,6 @@ func main() {
 	server.PrintRouter()
 
 	if err := server.Start(":6969"); err != nil {
-		log.Fatalf("[main] server.NewServer() retrurned error: %+v\n", err)
+		log.Fatalf("[main] server.NewServer() returned error: %+v\n", err)
 	}
 }
