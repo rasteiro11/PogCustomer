@@ -2,9 +2,9 @@ package user
 
 import (
 	"context"
-	"flashcards/models"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/rasteiro11/PogCustomer/models"
 )
 
 type (
@@ -13,8 +13,8 @@ type (
 		Register(c *fiber.Ctx) error
 	}
 	Usecase interface {
-		Login(ctx context.Context, req *models.LoginRequest) (*models.LoginResponse, error)
-		Register(ctx context.Context, req *models.RegisterRequest) (*models.RegisterResponse, error)
+		Login(ctx context.Context, req *models.User) (*models.LoginResponse, error)
+		Register(ctx context.Context, req *models.User) (*models.RegisterResponse, error)
 	}
 	Repository interface {
 		FindOne(ctx context.Context, user *models.User) (*models.User, error)
