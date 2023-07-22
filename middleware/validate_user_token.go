@@ -2,11 +2,11 @@ package middleware
 
 import (
 	"errors"
-	"flashcards/models"
 	"os"
 	"strings"
 
 	"github.com/rasteiro11/PogCore/pkg/transport/rest"
+	"github.com/rasteiro11/PogCustomer/models"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"

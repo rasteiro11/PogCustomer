@@ -2,10 +2,11 @@ package repository
 
 import (
 	"context"
-	"flashcards/models"
-	"flashcards/src/user"
-	"gorm.io/gorm"
 	"log"
+
+	"github.com/rasteiro11/PogCustomer/models"
+	"github.com/rasteiro11/PogCustomer/src/user"
+	"gorm.io/gorm"
 )
 
 type repository struct {
@@ -13,6 +14,8 @@ type repository struct {
 }
 
 var _ user.Repository = (*repository)(nil)
+
+var ErrRecordNotFound = gorm.ErrRecordNotFound
 
 func NewRepository(db *gorm.DB) user.Repository {
 	repo := &repository{
@@ -23,17 +26,18 @@ func NewRepository(db *gorm.DB) user.Repository {
 }
 
 func (r *repository) FindOne(ctx context.Context, user *models.User) (*models.User, error) {
-	res := &models.User{}
-	if err := r.db.Where(user).Take(res).Error; err != nil {
+	res := &User{}
+	if err := r.db.Where(userEntityMapper(user)).Take(res).Error; err != nil {
 		log.Printf("[user.repository.FindOne] db.Take() returned error: %+v\n", err)
 		return nil, err
 	}
 
-	return res, nil
+	return userMapper(res), nil
 }
 
 func (r *repository) Create(ctx context.Context, user *models.User) (*models.User, error) {
-	if err := r.db.Create(user).Error; err != nil {
+	res := userEntityMapper(user)
+	if err := r.db.Create(res).Error; err != nil {
 		log.Printf("[user.repository.Create] db.Create() returned error: %+v\n", err)
 		return nil, err
 	}
@@ -42,11 +46,11 @@ func (r *repository) Create(ctx context.Context, user *models.User) (*models.Use
 }
 
 func (r *repository) FindOneByEmail(ctx context.Context, user *models.User) (*models.User, error) {
-	res := &models.User{}
-	if err := r.db.Where(&models.User{Email: user.Email}).Take(res).Error; err != nil {
+	res := &User{}
+	if err := r.db.Where(&User{Email: user.Email}).Take(res).Error; err != nil {
 		log.Printf("[user.repository.FindOne] db.Take() returned error: %+v\n", err)
 		return nil, err
 	}
 
-	return res, nil
+	return userMapper(res), nil
 }

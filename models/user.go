@@ -4,11 +4,10 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"gorm.io/gorm"
 )
 
 type User struct {
-	gorm.Model
+	ID       uint
 	Email    string
 	Password string
 }
@@ -16,12 +15,6 @@ type User struct {
 type Credentials struct {
 	Password string
 	Email    string
-}
-
-type Claims struct {
-	UserID uint   `json:"user_id"`
-	Email  string `json:"email"`
-	jwt.RegisteredClaims
 }
 
 type LoginRequest struct {
@@ -40,4 +33,10 @@ type RegisterRequest struct {
 type RegisterResponse struct {
 	Token     string
 	ExpiresAt time.Time
+}
+
+type Claims struct {
+	UserID uint   `json:"user_id"`
+	Email  string `json:"email"`
+	jwt.RegisteredClaims
 }

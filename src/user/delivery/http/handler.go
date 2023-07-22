@@ -2,16 +2,17 @@ package http
 
 import (
 	"errors"
-	"flashcards/models"
-	"flashcards/src/user"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/rasteiro11/PogCore/pkg/server"
 	"github.com/rasteiro11/PogCore/pkg/transport/rest"
+	"github.com/rasteiro11/PogCustomer/models"
+	"github.com/rasteiro11/PogCustomer/src/user"
 )
 
 var AuthGroupPath = "/auth"
@@ -43,33 +44,49 @@ func NewHandler(server server.Server, opts ...HandlerOpt) {
 
 var _ user.Handler = (*handler)(nil)
 
-func (h *handler) Login(c *fiber.Ctx) error {
-	req := &models.LoginRequest{
-		Credentials: &models.Credentials{},
-	}
+type loginRequest struct {
+	Password string `json:"password"`
+	Email    string `json:"email"`
+}
 
-	if err := c.BodyParser(req.Credentials); err != nil {
+type loginResponse struct {
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expires_at"`
+}
+
+type registerRequest struct {
+	Password string `json:"password"`
+	Email    string `json:"email"`
+}
+
+type registerResponse struct {
+	Token     string    `json:"token"`
+	ExpiresAt time.Time `json:"expires_at"`
+}
+
+func (h *handler) Login(c *fiber.Ctx) error {
+	req := &loginRequest{}
+
+	if err := c.BodyParser(req); err != nil {
 		return rest.NewStatusBadRequest(c, err)
 	}
 
-	creds, err := h.usecase.Login(c.Context(), req)
+	creds, err := h.usecase.Login(c.Context(), loginRequestMapper(req))
 	if err != nil {
 		return rest.NewStatusUnauthorized(c, err)
 	}
 
-	return rest.NewStatusCreated(c, rest.WithBody(creds))
+	return rest.NewStatusOk(c, rest.WithBody(loginResponseMapper(creds)))
 }
 
 func (h *handler) Register(c *fiber.Ctx) error {
-	req := &models.RegisterRequest{
-		Credentials: &models.Credentials{},
-	}
+	req := &registerRequest{}
 
-	if err := c.BodyParser(req.Credentials); err != nil {
+	if err := c.BodyParser(req); err != nil {
 		return rest.NewStatusBadRequest(c, err)
 	}
 
-	creds, err := h.usecase.Register(c.Context(), req)
+	creds, err := h.usecase.Register(c.Context(), registerRequestMapper(req))
 	if err != nil {
 		return rest.NewStatusUnauthorized(c, err)
 	}
@@ -100,5 +117,5 @@ func (h *handler) Welcome(c *fiber.Ctx) error {
 		return rest.NewStatusUnauthorized(c, err)
 	}
 
-	return rest.NewStatusCreated(c, rest.WithBody(claims))
+	return rest.NewStatusOk(c, rest.WithBody(claims))
 }

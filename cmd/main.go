@@ -1,15 +1,16 @@
 package main
 
 import (
-	middlewares "flashcards/middleware"
-	"flashcards/models"
-	usersHttp "flashcards/src/user/delivery/http"
-	usersRepo "flashcards/src/user/repository"
-	usersCase "flashcards/src/user/usecase"
+	"log"
+
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/rasteiro11/PogCore/pkg/database"
 	"github.com/rasteiro11/PogCore/pkg/server"
-	"log"
+	"github.com/rasteiro11/PogCustomer/entities"
+	middlewares "github.com/rasteiro11/PogCustomer/middleware"
+	usersHttp "github.com/rasteiro11/PogCustomer/src/user/delivery/http"
+	usersRepo "github.com/rasteiro11/PogCustomer/src/user/repository"
+	usersCase "github.com/rasteiro11/PogCustomer/src/user/usecase"
 )
 
 func main() {
@@ -18,7 +19,7 @@ func main() {
 		log.Fatalf("[main] database.NewDatabase() retunrned error: %+v\n", err)
 	}
 
-	if err := database.Migrate(models.GetEntities()...); err != nil {
+	if err := database.Migrate(entities.GetEntities()...); err != nil {
 		log.Fatalf("[main] database.Migrate() retunrned error: %+v\n", err)
 	}
 
