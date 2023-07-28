@@ -142,3 +142,12 @@ func (u *usecase) extractClaims(ctx context.Context, token string) (*claims, err
 	})
 	return claims, err
 }
+
+func (u *usecase) FindOne(ctx context.Context, req *models.User) (*models.User, error) {
+	user, err := u.repository.FindOne(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}

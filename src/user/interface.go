@@ -16,6 +16,7 @@ type (
 		Login(ctx context.Context, req *models.User) (*models.LoginResponse, error)
 		Register(ctx context.Context, req *models.User) (*models.RegisterResponse, error)
 		ChangePassword(ctx context.Context, req *models.ChangePasswordRequest) (*models.ChangePasswordResponse, error)
+		FindOne(ctx context.Context, req *models.User) (*models.User, error)
 	}
 	Repository interface {
 		FindOne(ctx context.Context, user *models.User) (*models.User, error)
