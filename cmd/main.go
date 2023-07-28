@@ -1,26 +1,30 @@
 package main
 
 import (
-	"log"
-
+	"context"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/rasteiro11/PogCore/pkg/database"
+	"github.com/rasteiro11/PogCore/pkg/logger"
 	"github.com/rasteiro11/PogCore/pkg/server"
+	"github.com/rasteiro11/PogCore/pkg/transport/grpcserver"
 	"github.com/rasteiro11/PogCustomer/entities"
+	pbCustomer "github.com/rasteiro11/PogCustomer/gen/proto/go/customer"
 	middlewares "github.com/rasteiro11/PogCustomer/middleware"
 	usersHttp "github.com/rasteiro11/PogCustomer/src/user/delivery/http"
 	usersRepo "github.com/rasteiro11/PogCustomer/src/user/repository"
+	usersSvc "github.com/rasteiro11/PogCustomer/src/user/service"
 	usersCase "github.com/rasteiro11/PogCustomer/src/user/usecase"
 )
 
 func main() {
+	ctx := context.Background()
 	database, err := database.NewDatabase(database.GetMysqlEngineBuilder)
 	if err != nil {
-		log.Fatalf("[main] database.NewDatabase() retunrned error: %+v\n", err)
+		logger.Of(ctx).Fatalf("[main] database.NewDatabase() retunrned error: %+v\n", err)
 	}
 
 	if err := database.Migrate(entities.GetEntities()...); err != nil {
-		log.Fatalf("[main] database.Migrate() retunrned error: %+v\n", err)
+		logger.Of(ctx).Fatalf("[main] database.Migrate() returned error: %+v\n", err)
 	}
 
 	server := server.NewServer(server.WithPrefix("/customer"))
@@ -37,11 +41,23 @@ func main() {
 		usersCase.WithRepository(usersRepo),
 	)
 
+	customerSvc := usersSvc.NewService(usersSvc.WithUserUsecase(usersUsecase))
+
+	go func() {
+		server := grpcserver.NewServer(grpcserver.WithReflectionEnabled())
+
+		server.Register(pbCustomer.CustomerService_ServiceDesc, customerSvc)
+
+		if err := server.Run(); err != nil {
+			logger.Of(ctx).Fatalf("[main] server.Run() returned error: %+v", err)
+		}
+	}()
+
 	usersHttp.NewHandler(server, usersHttp.WithUsecase(usersUsecase))
 
 	server.PrintRouter()
 
 	if err := server.Start(":6969"); err != nil {
-		log.Fatalf("[main] server.NewServer() retrurned error: %+v\n", err)
+		logger.Of(ctx).Fatalf("[main] server.NewServer() returned error: %+v\n", err)
 	}
 }

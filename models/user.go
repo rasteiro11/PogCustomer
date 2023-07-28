@@ -40,3 +40,12 @@ type Claims struct {
 	Email  string `json:"email"`
 	jwt.RegisteredClaims
 }
+
+type ChangePasswordRequest struct {
+	Password    string
+	NewPassword string
+	Email       string
+}
+
+type ChangePasswordResponse struct {
+}
