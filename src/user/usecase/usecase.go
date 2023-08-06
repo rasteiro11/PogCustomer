@@ -5,14 +5,13 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"errors"
-	"hash"
-	"os"
-	"time"
-
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/rasteiro11/PogCustomer/models"
 	"github.com/rasteiro11/PogCustomer/src/user"
 	"github.com/rasteiro11/PogCustomer/src/user/repository"
+	"hash"
+	"os"
+	"time"
 )
 
 type (
@@ -73,7 +72,7 @@ func (u *usecase) Register(ctx context.Context, req *models.User) (*models.Regis
 		if !errors.Is(err, repository.ErrRecordNotFound) {
 			return nil, err
 		}
-		_, err = u.repository.Create(ctx, &models.User{Email: req.Email, Password: hashPassword(u.hash, req.Password)})
+		_, err := u.repository.Create(ctx, &models.User{Email: req.Email, Password: hashPassword(u.hash, req.Password)})
 		if err != nil {
 			return nil, err
 		}
