@@ -68,3 +68,12 @@ func (s *service) VerifySession(ctx context.Context, req *pbCustomer.VerifySessi
 		UserId: uint64(claims.UserID),
 	}, nil
 }
+
+func (s *service) GetUserByDocument(ctx context.Context, req *pbCustomer.GetUserByDocumentRequest) (*pbCustomer.GetUserByDocumentResponse, error) {
+	user, err := s.userUsecase.FindOne(ctx, getUserByDocumentRequest(req))
+	if err != nil {
+		return nil, err
+	}
+
+	return getUserByDocumentResponse(user), nil
+}

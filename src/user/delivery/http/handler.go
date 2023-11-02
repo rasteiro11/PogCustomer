@@ -2,17 +2,12 @@ package http
 
 import (
 	"errors"
-	"net/http"
-	"os"
-	"strings"
-	"time"
-
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/rasteiro11/PogCore/pkg/server"
 	"github.com/rasteiro11/PogCore/pkg/transport/rest"
-	"github.com/rasteiro11/PogCustomer/models"
 	"github.com/rasteiro11/PogCustomer/src/user"
+	"net/http"
+	"time"
 )
 
 var AuthGroupPath = "/auth"
@@ -40,7 +35,6 @@ func NewHandler(server server.Server, opts ...HandlerOpt) {
 	server.AddHandler("/signin", AuthGroupPath, http.MethodPost, h.Login)
 	server.AddHandler("/register", AuthGroupPath, http.MethodPost, h.Register)
 	server.AddHandler("/changepassword", AuthGroupPath, http.MethodPost, h.ChangePassword)
-	server.AddHandler("/welcome", AuthGroupPath, http.MethodPost, h.Welcome)
 }
 
 var ErrNotAuthorized = errors.New("not authorized")
@@ -60,6 +54,7 @@ type loginResponse struct {
 type registerRequest struct {
 	Password string `json:"password"`
 	Email    string `json:"email"`
+	Document string `json:"document"`
 }
 
 type registerResponse struct {
@@ -119,30 +114,4 @@ func (h *handler) ChangePassword(c *fiber.Ctx) error {
 	}
 
 	return rest.NewStatusOk(c, rest.WithBody(changePasswordResponseMapper(creds)))
-}
-
-func (h *handler) Welcome(c *fiber.Ctx) error {
-	jwtToken := c.GetReqHeaders()
-	tok, ok := jwtToken["Authorization"]
-	if !ok {
-		return rest.NewStatusUnauthorized(c, ErrNotAuthorized)
-	}
-
-	tok = strings.ReplaceAll(tok, "Bearer ", "")
-	claims := &models.Claims{}
-	token, err := jwt.ParseWithClaims(tok, claims, func(t *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("JWT_SECRET")), nil
-	})
-	if err != nil {
-		if errors.Is(err, jwt.ErrSignatureInvalid) {
-			return rest.NewStatusUnauthorized(c, err)
-		}
-		return rest.NewStatusBadRequest(c, err)
-	}
-
-	if !token.Valid {
-		return rest.NewStatusUnauthorized(c, err)
-	}
-
-	return rest.NewStatusOk(c, rest.WithBody(claims))
 }
