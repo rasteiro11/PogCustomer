@@ -13,7 +13,22 @@ func userMapper(req *pbCustomer.GetUserRequest) *models.User {
 
 func getUserResponseMapper(user *models.User) *pbCustomer.GetUserResponse {
 	return &pbCustomer.GetUserResponse{
-		Id:    int32(user.ID),
-		Email: user.Email,
+		Id:       int32(user.ID),
+		Email:    user.Email,
+		Document: user.Document,
+	}
+}
+
+func getUserByDocumentRequest(req *pbCustomer.GetUserByDocumentRequest) *models.User {
+	return &models.User{
+		Document: req.Document,
+	}
+}
+
+func getUserByDocumentResponse(req *models.User) *pbCustomer.GetUserByDocumentResponse {
+	return &pbCustomer.GetUserByDocumentResponse{
+		Id:       int32(req.ID),
+		Email:    req.Email,
+		Document: req.Document,
 	}
 }

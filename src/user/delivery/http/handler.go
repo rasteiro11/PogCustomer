@@ -3,15 +3,12 @@ package http
 import (
 	"errors"
 	"net/http"
-	"os"
-	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/rasteiro11/PogCore/pkg/server"
 	"github.com/rasteiro11/PogCore/pkg/transport/rest"
-	"github.com/rasteiro11/PogCustomer/models"
+	"github.com/rasteiro11/PogCore/pkg/validator"
 	"github.com/rasteiro11/PogCustomer/src/user"
 )
 
@@ -40,7 +37,6 @@ func NewHandler(server server.Server, opts ...HandlerOpt) {
 	server.AddHandler("/signin", AuthGroupPath, http.MethodPost, h.Login)
 	server.AddHandler("/register", AuthGroupPath, http.MethodPost, h.Register)
 	server.AddHandler("/changepassword", AuthGroupPath, http.MethodPost, h.ChangePassword)
-	server.AddHandler("/welcome", AuthGroupPath, http.MethodPost, h.Welcome)
 }
 
 var ErrNotAuthorized = errors.New("not authorized")
@@ -48,8 +44,8 @@ var ErrNotAuthorized = errors.New("not authorized")
 var _ user.Handler = (*handler)(nil)
 
 type loginRequest struct {
-	Password string `json:"password"`
-	Email    string `json:"email"`
+	Password string `json:"password" validate:"required"`
+	Email    string `json:"email" validate:"required"`
 }
 
 type loginResponse struct {
@@ -58,8 +54,9 @@ type loginResponse struct {
 }
 
 type registerRequest struct {
-	Password string `json:"password"`
-	Email    string `json:"email"`
+	Password string `json:"password" validate:"required"`
+	Email    string `json:"email" validate:"required"`
+	Document string `json:"document" validate:"required"`
 }
 
 type registerResponse struct {
@@ -68,9 +65,9 @@ type registerResponse struct {
 }
 
 type changePasswordRequest struct {
-	Password    string `json:"password"`
-	NewPassword string `json:"new_password"`
-	Email       string `json:"email"`
+	Password    string `json:"password" validate:"required"`
+	NewPassword string `json:"new_password" validate:"required"`
+	Email       string `json:"email" validate:"required"`
 }
 
 type changePasswordResponse struct {
@@ -81,6 +78,10 @@ func (h *handler) Login(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(req); err != nil {
 		return rest.NewStatusBadRequest(c, err)
+	}
+
+	if _, err := validator.IsRequestValid(req); err != nil {
+		return rest.NewResponse(c, http.StatusBadRequest, rest.WithBody(err)).JSON(c)
 	}
 
 	creds, err := h.usecase.Login(c.Context(), loginRequestMapper(req))
@@ -98,6 +99,10 @@ func (h *handler) Register(c *fiber.Ctx) error {
 		return rest.NewStatusBadRequest(c, err)
 	}
 
+	if _, err := validator.IsRequestValid(req); err != nil {
+		return rest.NewResponse(c, http.StatusBadRequest, rest.WithBody(err)).JSON(c)
+	}
+
 	creds, err := h.usecase.Register(c.Context(), registerRequestMapper(req))
 	if err != nil {
 		return rest.NewStatusUnprocessableEntity(c, err)
@@ -113,36 +118,14 @@ func (h *handler) ChangePassword(c *fiber.Ctx) error {
 		return rest.NewStatusBadRequest(c, err)
 	}
 
+	if _, err := validator.IsRequestValid(req); err != nil {
+		return rest.NewResponse(c, http.StatusBadRequest, rest.WithBody(err)).JSON(c)
+	}
+
 	creds, err := h.usecase.ChangePassword(c.Context(), changePasswordRequestMapper(req))
 	if err != nil {
 		return rest.NewStatusUnprocessableEntity(c, err)
 	}
 
 	return rest.NewStatusOk(c, rest.WithBody(changePasswordResponseMapper(creds)))
-}
-
-func (h *handler) Welcome(c *fiber.Ctx) error {
-	jwtToken := c.GetReqHeaders()
-	tok, ok := jwtToken["Authorization"]
-	if !ok {
-		return rest.NewStatusUnauthorized(c, ErrNotAuthorized)
-	}
-
-	tok = strings.ReplaceAll(tok, "Bearer ", "")
-	claims := &models.Claims{}
-	token, err := jwt.ParseWithClaims(tok, claims, func(t *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("JWT_SECRET")), nil
-	})
-	if err != nil {
-		if errors.Is(err, jwt.ErrSignatureInvalid) {
-			return rest.NewStatusUnauthorized(c, err)
-		}
-		return rest.NewStatusBadRequest(c, err)
-	}
-
-	if !token.Valid {
-		return rest.NewStatusUnauthorized(c, err)
-	}
-
-	return rest.NewStatusOk(c, rest.WithBody(claims))
 }

@@ -6,6 +6,7 @@ func userEntityMapper(query *models.User) *User {
 	return &User{
 		Email:    query.Email,
 		Password: query.Password,
+		Document: query.Document,
 	}
 }
 
@@ -14,5 +15,6 @@ func userMapper(query *User) *models.User {
 		ID:       query.ID,
 		Email:    query.Email,
 		Password: query.Password,
+		Document: query.Document,
 	}
 }

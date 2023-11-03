@@ -6,4 +6,5 @@ type User struct {
 	gorm.Model
 	Email    string
 	Password string
+	Document string
 }

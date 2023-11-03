@@ -19,6 +19,7 @@ func loginResponseMapper(req *models.LoginResponse) *loginResponse {
 func registerRequestMapper(req *registerRequest) *models.User {
 	return &models.User{
 		Email:    req.Email,
+		Document: req.Document,
 		Password: req.Password,
 	}
 }
