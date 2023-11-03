@@ -50,3 +50,15 @@ type ChangePasswordRequest struct {
 
 type ChangePasswordResponse struct {
 }
+
+type RegisterUserRequest struct {
+	Email    string
+	Password string
+	Document string
+	Wallet   string
+}
+
+type RegisterUserResponse struct {
+	Token     string
+	ExpiresAt time.Time
+}
