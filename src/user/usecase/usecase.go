@@ -67,18 +67,19 @@ func hashPassword(hasher hash.Hash, password string) string {
 }
 
 func (u *usecase) Register(ctx context.Context, req *models.User) (*models.RegisterResponse, error) {
-	_, err := u.repository.FindOne(ctx, &models.User{Email: req.Email})
+	_, err := u.repository.FindOne(ctx, &models.User{Email: req.Email, Document: req.Document})
 	if err != nil {
 		if !errors.Is(err, repository.ErrRecordNotFound) {
 			return nil, err
 		}
-		_, err := u.repository.Create(ctx, &models.User{Email: req.Email, Password: hashPassword(u.hash, req.Password)})
+		_, err := u.repository.Create(ctx, &models.User{Document: req.Document, Email: req.Email, Password: hashPassword(u.hash, req.Password)})
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	loginCreds, err := u.Login(ctx, &models.User{
+		Document: req.Document,
 		Password: req.Password,
 		Email:    req.Email,
 	})
@@ -94,7 +95,7 @@ func (u *usecase) Register(ctx context.Context, req *models.User) (*models.Regis
 
 func (u *usecase) Login(ctx context.Context, req *models.User) (*models.LoginResponse, error) {
 	expiresAt := time.Now().Add(time.Minute * 15)
-	user, err := u.repository.FindOne(ctx, &models.User{Email: req.Email, Password: hashPassword(u.hash, req.Password)})
+	user, err := u.repository.FindOne(ctx, &models.User{Document: req.Document, Email: req.Email, Password: hashPassword(u.hash, req.Password)})
 	if err != nil {
 		return nil, err
 	}

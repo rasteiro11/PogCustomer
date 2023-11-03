@@ -2,12 +2,14 @@ package http
 
 import (
 	"errors"
+	"net/http"
+	"time"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/rasteiro11/PogCore/pkg/server"
 	"github.com/rasteiro11/PogCore/pkg/transport/rest"
+	"github.com/rasteiro11/PogCore/pkg/validator"
 	"github.com/rasteiro11/PogCustomer/src/user"
-	"net/http"
-	"time"
 )
 
 var AuthGroupPath = "/auth"
@@ -42,8 +44,8 @@ var ErrNotAuthorized = errors.New("not authorized")
 var _ user.Handler = (*handler)(nil)
 
 type loginRequest struct {
-	Password string `json:"password"`
-	Email    string `json:"email"`
+	Password string `json:"password" validate:"required"`
+	Email    string `json:"email" validate:"required"`
 }
 
 type loginResponse struct {
@@ -52,9 +54,9 @@ type loginResponse struct {
 }
 
 type registerRequest struct {
-	Password string `json:"password"`
-	Email    string `json:"email"`
-	Document string `json:"document"`
+	Password string `json:"password" validate:"required"`
+	Email    string `json:"email" validate:"required"`
+	Document string `json:"document" validate:"required"`
 }
 
 type registerResponse struct {
@@ -63,9 +65,9 @@ type registerResponse struct {
 }
 
 type changePasswordRequest struct {
-	Password    string `json:"password"`
-	NewPassword string `json:"new_password"`
-	Email       string `json:"email"`
+	Password    string `json:"password" validate:"required"`
+	NewPassword string `json:"new_password" validate:"required"`
+	Email       string `json:"email" validate:"required"`
 }
 
 type changePasswordResponse struct {
@@ -76,6 +78,10 @@ func (h *handler) Login(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(req); err != nil {
 		return rest.NewStatusBadRequest(c, err)
+	}
+
+	if _, err := validator.IsRequestValid(req); err != nil {
+		return rest.NewResponse(c, http.StatusBadRequest, rest.WithBody(err)).JSON(c)
 	}
 
 	creds, err := h.usecase.Login(c.Context(), loginRequestMapper(req))
@@ -93,6 +99,10 @@ func (h *handler) Register(c *fiber.Ctx) error {
 		return rest.NewStatusBadRequest(c, err)
 	}
 
+	if _, err := validator.IsRequestValid(req); err != nil {
+		return rest.NewResponse(c, http.StatusBadRequest, rest.WithBody(err)).JSON(c)
+	}
+
 	creds, err := h.usecase.Register(c.Context(), registerRequestMapper(req))
 	if err != nil {
 		return rest.NewStatusUnprocessableEntity(c, err)
@@ -106,6 +116,10 @@ func (h *handler) ChangePassword(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(req); err != nil {
 		return rest.NewStatusBadRequest(c, err)
+	}
+
+	if _, err := validator.IsRequestValid(req); err != nil {
+		return rest.NewResponse(c, http.StatusBadRequest, rest.WithBody(err)).JSON(c)
 	}
 
 	creds, err := h.usecase.ChangePassword(c.Context(), changePasswordRequestMapper(req))
