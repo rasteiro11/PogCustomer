@@ -57,6 +57,7 @@ type registerRequest struct {
 	Password string `json:"password" validate:"required"`
 	Email    string `json:"email" validate:"required"`
 	Document string `json:"document" validate:"required"`
+	Wallet   string `json:"wallet" validate:"required"`
 }
 
 type registerResponse struct {

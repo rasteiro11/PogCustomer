@@ -14,7 +14,7 @@ type (
 	}
 	Usecase interface {
 		Login(ctx context.Context, req *models.User) (*models.LoginResponse, error)
-		Register(ctx context.Context, req *models.User) (*models.RegisterResponse, error)
+		Register(ctx context.Context, req *models.RegisterUserRequest) (*models.RegisterUserResponse, error)
 		ChangePassword(ctx context.Context, req *models.ChangePasswordRequest) (*models.ChangePasswordResponse, error)
 		FindOne(ctx context.Context, req *models.User) (*models.User, error)
 	}
@@ -23,5 +23,6 @@ type (
 		Create(ctx context.Context, user *models.User) (*models.User, error)
 		FindOneByEmail(ctx context.Context, user *models.User) (*models.User, error)
 		UpdateById(ctx context.Context, user *models.User) (*models.User, error)
+		Tx(ctx context.Context, fn func(ctx context.Context) error) error
 	}
 )

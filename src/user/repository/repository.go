@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+
+	"github.com/rasteiro11/PogCore/pkg/database"
 	"github.com/rasteiro11/PogCore/pkg/logger"
 	"github.com/rasteiro11/PogCustomer/models"
 	"github.com/rasteiro11/PogCustomer/src/user"
@@ -36,7 +38,13 @@ func (r *repository) FindOne(ctx context.Context, user *models.User) (*models.Us
 
 func (r *repository) Create(ctx context.Context, user *models.User) (*models.User, error) {
 	res := userEntityMapper(user)
-	if err := r.db.Create(res).Error; err != nil {
+	
+	tx, err := database.FromContext(ctx)
+	if err != nil {
+		tx = r.db
+	}
+		
+	if err := tx.Create(res).Error; err != nil {
 		logger.Of(ctx).Errorf("[user.repository.Create] db.Create() returned error: %+v\n", err)
 		return nil, err
 	}
@@ -66,4 +74,11 @@ func (r *repository) UpdateById(ctx context.Context, user *models.User) (*models
 	}
 
 	return userMapper(query), nil
+}
+
+func (r *repository) Tx(ctx context.Context, fn func(ctx context.Context) error) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		ctx := database.WithTx(ctx, tx)
+		return fn(ctx)
+	})
 }
