@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/rasteiro11/PogCore/pkg/config"
 	pbCustomer "github.com/rasteiro11/PogCustomer/gen/proto/go/customer"
