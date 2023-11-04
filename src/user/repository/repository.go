@@ -38,17 +38,18 @@ func (r *repository) FindOne(ctx context.Context, user *models.User) (*models.Us
 
 func (r *repository) Create(ctx context.Context, user *models.User) (*models.User, error) {
 	res := userEntityMapper(user)
-	
+
 	tx, err := database.FromContext(ctx)
 	if err != nil {
 		tx = r.db
 	}
-		
+
 	if err := tx.Create(res).Error; err != nil {
 		logger.Of(ctx).Errorf("[user.repository.Create] db.Create() returned error: %+v\n", err)
 		return nil, err
 	}
 
+	user.ID = res.ID
 	return user, nil
 }
 
