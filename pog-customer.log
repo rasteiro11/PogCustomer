@@ -1,13 +1,16 @@
-2023/11/02 23:11:37 [[96mINFO[0m] - [METHOD] POST - [PATH] /customer/auth/signin
-2023/11/02 23:11:37 [[96mINFO[0m] - [METHOD] POST - [PATH] /customer/auth/register
-2023/11/02 23:11:37 [[96mINFO[0m] - [METHOD] POST - [PATH] /customer/auth/changepassword
+2023/11/03 18:12:15 [[96mINFO[0m] - [METHOD] POST - [PATH] /customer/auth/signin
+2023/11/03 18:12:15 [[96mINFO[0m] - [METHOD] POST - [PATH] /customer/auth/register
+2023/11/03 18:12:15 [[96mINFO[0m] - [METHOD] POST - [PATH] /customer/auth/changepassword
 
  ┌───────────────────────────────────────────────────┐ 
  │                   Fiber v2.48.0                   │ 
- │               http://127.0.0.1:6969               │ 
- │       (bound on host 0.0.0.0 and port 6969)       │ 
+ │             http://192.168.0.14:6969              │ 
  │                                                   │ 
  │ Handlers ............. 6  Processes ........... 1 │ 
- │ Prefork ....... Disabled  PID ............. 18169 │ 
+ │ Prefork ....... Disabled  PID .............. 5794 │ 
  └───────────────────────────────────────────────────┘ 
 
+
+2023/11/03 23:42:01 [31;1m/home/pi/Documents/PogCorp/PogCustomer/src/user/repository/repository.go:29 [35;1mrecord not found
+[0m[33m[4.093ms] [34;1m[rows:0][0m SELECT * FROM `users` WHERE `users`.`email` = 'titico03@gmail.com' AND `users`.`document` = '52546386808' AND `users`.`deleted_at` IS NULL LIMIT 1
+2023/11/03 23:42:01 [[91mERROR[0m] - [user.repository.FindOne] db.Take() returned error: record not found
