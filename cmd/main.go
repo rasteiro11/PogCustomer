@@ -74,7 +74,7 @@ func main() {
 
 	server.PrintRouter()
 
-	if err := server.Start(":6969"); err != nil {
+	if err := server.Start("192.168.0.14:6969"); err != nil {
 		logger.Of(ctx).Fatalf("[main] server.NewServer() returned error: %+v\n", err)
 	}
 }
