@@ -75,7 +75,7 @@ func hashPassword(hasher hash.Hash, password string) string {
 }
 
 func (u *usecase) Register(ctx context.Context, req *models.RegisterUserRequest) (*models.RegisterUserResponse, error) {
-	_, err := u.repository.FindOne(ctx, &models.User{Email: req.Email, Document: req.Document})
+	_, err := u.repository.FindOne(ctx, &models.User{Document: req.Document})
 	if err != nil {
 		if !errors.Is(err, repository.ErrRecordNotFound) {
 			return nil, err
