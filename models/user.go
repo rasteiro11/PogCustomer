@@ -25,6 +25,7 @@ type LoginRequest struct {
 type LoginResponse struct {
 	Token     string
 	ExpiresAt time.Time
+	Role      *Role
 }
 
 type RegisterRequest struct {
@@ -61,4 +62,5 @@ type RegisterUserRequest struct {
 type RegisterUserResponse struct {
 	Token     string
 	ExpiresAt time.Time
+	Role      *Role
 }

@@ -1,9 +1,12 @@
 package entities
 
-import "github.com/rasteiro11/PogCustomer/src/user/repository"
+import "github.com/rasteiro11/PogCustomer/models"
 
 func GetEntities() []any {
 	return []any{
-		&repository.User{},
+		&models.User{},
+		&models.Role{},
+		&models.UserRole{},
+		&models.DefaultRole{},
 	}
 }

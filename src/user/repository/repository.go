@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-
 	"github.com/rasteiro11/PogCore/pkg/database"
 	"github.com/rasteiro11/PogCore/pkg/logger"
 	"github.com/rasteiro11/PogCustomer/models"

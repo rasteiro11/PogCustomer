@@ -5,22 +5,30 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"errors"
-	"github.com/golang-jwt/jwt/v4"
-	pbCrypto "github.com/rasteiro11/PogCustomer/gen/proto/go/crypto"
-	"github.com/rasteiro11/PogCustomer/models"
-	"github.com/rasteiro11/PogCustomer/src/user"
-	"github.com/rasteiro11/PogCustomer/src/user/repository"
+	"fmt"
 	"hash"
 	"os"
 	"time"
+
+	"github.com/golang-jwt/jwt/v4"
+	pbCrypto "github.com/rasteiro11/PogCustomer/gen/proto/go/crypto"
+	"github.com/rasteiro11/PogCustomer/models"
+	"github.com/rasteiro11/PogCustomer/src/defaultrole"
+	"github.com/rasteiro11/PogCustomer/src/role"
+	"github.com/rasteiro11/PogCustomer/src/user"
+	"github.com/rasteiro11/PogCustomer/src/user/repository"
+	"github.com/rasteiro11/PogCustomer/src/userrole"
 )
 
 type (
 	UsecaseOpt func(*usecase)
 	usecase    struct {
-		repository    user.Repository
-		cryptoService pbCrypto.CryptoServiceClient
-		hash          hash.Hash
+		repository      user.Repository
+		roleRepo        role.Repository
+		userRoleRepo    userrole.Repository
+		defaultRoleRepo defaultrole.Repository
+		cryptoService   pbCrypto.CryptoServiceClient
+		hash            hash.Hash
 	}
 )
 
@@ -39,6 +47,24 @@ func WithCryptoClient(client pbCrypto.CryptoServiceClient) UsecaseOpt {
 func WithRepository(repository user.Repository) UsecaseOpt {
 	return func(u *usecase) {
 		u.repository = repository
+	}
+}
+
+func WithRoleRepository(repository role.Repository) UsecaseOpt {
+	return func(u *usecase) {
+		u.roleRepo = repository
+	}
+}
+
+func WithUserRoleRepository(repository userrole.Repository) UsecaseOpt {
+	return func(u *usecase) {
+		u.userRoleRepo = repository
+	}
+}
+
+func WithDefaultRoleRepository(repository defaultrole.Repository) UsecaseOpt {
+	return func(u *usecase) {
+		u.defaultRoleRepo = repository
 	}
 }
 
@@ -75,29 +101,54 @@ func hashPassword(hasher hash.Hash, password string) string {
 }
 
 func (u *usecase) Register(ctx context.Context, req *models.RegisterUserRequest) (*models.RegisterUserResponse, error) {
-	_, err := u.repository.FindOne(ctx, &models.User{Document: req.Document})
-	if err != nil {
+	newRole := &models.Role{}
+
+	if _, err := u.repository.FindOne(ctx, &models.User{Email: req.Email}); err != nil {
+		fmt.Printf("ENTERED FIND ONE CONTEXT")
 		if !errors.Is(err, repository.ErrRecordNotFound) {
+			fmt.Printf("ERR RECORD NOT FOUND")
 			return nil, err
 		}
 
-		err := u.repository.Tx(ctx, func(ctx context.Context) error {
+		if err = u.repository.Tx(ctx, func(ctx context.Context) error {
+
 			user, err := u.repository.Create(ctx, &models.User{Document: req.Document, Email: req.Email, Password: hashPassword(u.hash, req.Password)})
+			if err != nil {
+				fmt.Printf("ERR CREATING")
+				return err
+			}
+
+			defaultRole, err := u.defaultRoleRepo.First(ctx, &models.DefaultRole{})
+			if err != nil {
+				fmt.Printf("ERR DEFAULT ROLE")
+				return err
+			}
+
+			fmt.Printf("DEFAULT ROLE: %+v", defaultRole)
+
+			newRole.Name = defaultRole.Name
+			newRole, err = u.roleRepo.Store(ctx, newRole)
 			if err != nil {
 				return err
 			}
 
-			if _, err := u.cryptoService.RegisterUserWallet(ctx, &pbCrypto.RegisterUserWalletRequest{
-				UserId:  int32(user.ID),
-				Wallet:  req.Wallet,
-				Network: "Ethereum",
+			if _, err := u.userRoleRepo.Store(ctx, &models.UserRole{
+				UserID: user.ID,
+				RoleID: newRole.ID,
 			}); err != nil {
 				return err
 			}
 
+			// if _, err := u.cryptoService.RegisterUserWallet(ctx, &pbCrypto.RegisterUserWalletRequest{
+			// 	UserId:  int32(user.ID),
+			// 	Wallet:  req.Wallet,
+			// 	Network: "Ethereum",
+			// }); err != nil {
+			// 	return err
+			// }
+
 			return nil
-		})
-		if err != nil {
+		}); err != nil {
 			return nil, err
 		}
 	}
@@ -114,6 +165,7 @@ func (u *usecase) Register(ctx context.Context, req *models.RegisterUserRequest)
 	return &models.RegisterUserResponse{
 		Token:     loginCreds.Token,
 		ExpiresAt: loginCreds.ExpiresAt,
+		Role:      newRole,
 	}, nil
 }
 
@@ -132,6 +184,20 @@ func (u *usecase) Login(ctx context.Context, req *models.User) (*models.LoginRes
 		},
 	}
 
+	userRole, err := u.userRoleRepo.Find(ctx, &models.UserRole{
+		UserID: user.ID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	role, err := u.roleRepo.Find(ctx, &models.Role{
+		ID: userRole.RoleID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 	if err != nil {
@@ -141,6 +207,7 @@ func (u *usecase) Login(ctx context.Context, req *models.User) (*models.LoginRes
 	return &models.LoginResponse{
 		Token:     tokenString,
 		ExpiresAt: expiresAt,
+		Role:      role,
 	}, nil
 }
 

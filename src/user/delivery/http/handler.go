@@ -56,8 +56,6 @@ type loginResponse struct {
 type registerRequest struct {
 	Password string `json:"password" validate:"required"`
 	Email    string `json:"email" validate:"required"`
-	Document string `json:"document" validate:"required"`
-	Wallet   string `json:"wallet" validate:"required"`
 }
 
 type registerResponse struct {
@@ -90,7 +88,7 @@ func (h *handler) Login(c *fiber.Ctx) error {
 		return rest.NewStatusUnauthorized(c, err)
 	}
 
-	return rest.NewStatusOk(c, rest.WithBody(loginResponseMapper(creds)))
+	return rest.NewStatusOk(c, rest.WithBody(creds))
 }
 
 func (h *handler) Register(c *fiber.Ctx) error {

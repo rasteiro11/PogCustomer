@@ -2,23 +2,24 @@ package main
 
 import (
 	"context"
-
 	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/rasteiro11/PogCore/pkg/config"
 	"github.com/rasteiro11/PogCore/pkg/database"
 	"github.com/rasteiro11/PogCore/pkg/logger"
 	"github.com/rasteiro11/PogCore/pkg/server"
 	"github.com/rasteiro11/PogCore/pkg/transport/grpcserver"
 	"github.com/rasteiro11/PogCustomer/entities"
-	pbCrypto "github.com/rasteiro11/PogCustomer/gen/proto/go/crypto"
+	// pbCrypto "github.com/rasteiro11/PogCustomer/gen/proto/go/crypto"
 	pbCustomer "github.com/rasteiro11/PogCustomer/gen/proto/go/customer"
 	middlewares "github.com/rasteiro11/PogCustomer/middleware"
+	defaultRoleRepo "github.com/rasteiro11/PogCustomer/src/defaultrole/repository"
+	roleRepo "github.com/rasteiro11/PogCustomer/src/role/repository"
 	usersHttp "github.com/rasteiro11/PogCustomer/src/user/delivery/http"
 	usersRepo "github.com/rasteiro11/PogCustomer/src/user/repository"
 	usersSvc "github.com/rasteiro11/PogCustomer/src/user/service"
 	usersCase "github.com/rasteiro11/PogCustomer/src/user/usecase"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	userRoleRepo "github.com/rasteiro11/PogCustomer/src/userrole/repository"
+	// "google.golang.org/grpc"
+	// "google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
@@ -42,20 +43,26 @@ func main() {
 	db := database.Conn()
 
 	usersRepo := usersRepo.NewRepository(db)
+	roleRepo := roleRepo.NewRepository(db)
+	userRoleRepo := userRoleRepo.NewRepository(db)
+	defaultRoleRepo := defaultRoleRepo.NewRepository(db)
 
-	credentials := insecure.NewCredentials()
-	cryptoConn, err := grpc.Dial(config.Instance().String("CRYPTO_SERVICE"),
-		grpc.WithTransportCredentials(credentials))
-	if err != nil {
-		logger.Of(ctx).Fatalf(
-			"[main] grpc.Dial returned error: err=%+v", err)
-	}
+	// credentials := insecure.NewCredentials()
+	// cryptoConn, err := grpc.Dial(config.Instance().String("CRYPTO_SERVICE"),
+	// 	grpc.WithTransportCredentials(credentials))
+	// if err != nil {
+	// 	logger.Of(ctx).Fatalf(
+	// 		"[main] grpc.Dial returned error: err=%+v", err)
+	// }
 
-	cryptoClient := pbCrypto.NewCryptoServiceClient(cryptoConn)
+	// cryptoClient := pbCrypto.NewCryptoServiceClient(cryptoConn)
 
 	usersUsecase := usersCase.NewUsecase(
-		usersCase.WithCryptoClient(cryptoClient),
+		// usersCase.WithCryptoClient(cryptoClient),
 		usersCase.WithRepository(usersRepo),
+		usersCase.WithRoleRepository(roleRepo),
+		usersCase.WithUserRoleRepository(userRoleRepo),
+		usersCase.WithDefaultRoleRepository(defaultRoleRepo),
 	)
 
 	customerSvc := usersSvc.NewService(usersSvc.WithUserUsecase(usersUsecase))
@@ -74,7 +81,7 @@ func main() {
 
 	server.PrintRouter()
 
-	if err := server.Start("192.168.0.14:6969"); err != nil {
+	if err := server.Start("0.0.0.0:8080"); err != nil {
 		logger.Of(ctx).Fatalf("[main] server.NewServer() returned error: %+v\n", err)
 	}
 }
