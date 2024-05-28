@@ -1,9 +1,15 @@
 package entities
 
-import "github.com/rasteiro11/PogCustomer/src/user/repository"
+import "github.com/rasteiro11/PogPaymentSheet/models"
 
 func GetEntities() []any {
 	return []any{
-		&repository.User{},
+		&models.VR{},
+		&models.DefaultVR{},
+		&models.Department{},
+		&models.Rank{},
+		&models.Employee{},
+		&models.EmployeeFrequency{},
+		&models.Frequency{},
 	}
 }

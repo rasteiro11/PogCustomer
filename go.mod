@@ -1,4 +1,4 @@
-module github.com/rasteiro11/PogCustomer
+module github.com/rasteiro11/PogPaymentSheet
 
 go 1.19
 
